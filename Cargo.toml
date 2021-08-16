@@ -9,5 +9,6 @@ edition = "2018"
 gen_id_allocator = { git = "https://github.com/frsrblch/gen_id_allocator" }
 gen_id_component = { git = "https://github.com/frsrblch/gen_id_component" }
 gen_id_relations = { git = "https://github.com/frsrblch/gen_id_relations" }
+orbital_mechanics = { git = "https://github.com/frsrblch/orbital_mechanics" }
 iter_context = { git = "https://github.com/frsrblch/iter_context" }
 physics_types = { git = "https://github.com/frsrblch/physics_types" }
