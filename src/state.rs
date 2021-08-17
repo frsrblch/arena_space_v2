@@ -10,5 +10,5 @@ pub struct Allocators {
 pub struct State {
     pub allocators: Allocators,
     pub star: Stars,
-    pub bodies: Stars,
+    pub body: Bodies,
 }

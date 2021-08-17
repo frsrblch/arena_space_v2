@@ -1,4 +1,5 @@
 use crate::state::State;
+use physics_types::DateTime;
 
 #[derive(Debug)]
 pub struct SystemState {
@@ -8,6 +9,12 @@ pub struct SystemState {
 
 #[derive(Debug)]
 pub struct SystemQueue;
+
+impl SystemQueue {
+    pub(crate) fn new(_start: DateTime) -> Self {
+        Self
+    }
+}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Systems {}
