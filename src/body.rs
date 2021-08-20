@@ -1,6 +1,8 @@
+use crate::body::star_bodies::StarBodies;
 use crate::*;
-use gen_id_relations::{Relation, Relations};
+use gen_id_relations::{RangeRelation, RangeRelations};
 use orbital_mechanics::EllipticalOrbit;
+use std::ops::Index;
 
 type Comp<T> = Component<Body, T>;
 
@@ -27,8 +29,8 @@ pub struct Bodies {
     pub radius: Comp<Length>,
     pub orbit: Comp<EllipticalOrbit>,
 
-    pub star: Comp<Id<Star>>,
-    pub relation: Relations<Body>,
+    pub star_bodies: StarBodies,
+    pub relation: RangeRelations<Body>,
 }
 
 impl Bodies {
@@ -38,7 +40,7 @@ impl Bodies {
         self.radius.insert(id, body.radius);
         self.orbit.insert(id, body.orbit);
 
-        self.star.insert(id, links.star);
+        self.star_bodies.link(links.star, id);
 
         match links.parent {
             Some(parent) => self.relation.insert_child(id, parent),
@@ -48,14 +50,60 @@ impl Bodies {
 
     pub fn orbit_distance(&self, body: Id<Body>, time: TimeFloat) -> Distance {
         match self.relation[body] {
-            Relation::ChildOf(parent) => {
+            RangeRelation::ChildOf(parent) => {
                 self.orbit[parent].distance(time) + self.orbit[body].distance(time)
             }
-            Relation::ParentOf(_) => self.orbit[body].distance(time),
+            RangeRelation::ParentOf(_) => self.orbit[body].distance(time),
         }
     }
 
     pub fn position(&self, body: Id<Body>, time: TimeFloat, stars: &Stars) -> Position {
-        stars.position[self.star[body]] + self.orbit_distance(body, time)
+        let star = self.star_bodies[body];
+        stars.position[star] + self.orbit_distance(body, time)
+    }
+
+    // TODO Relations::parents<I: IntoIterator<Item=Id<Arena>>>(I) -> impl Iterator
+    pub fn planets(&self, star: Id<Star>) -> impl Iterator<Item = Id<Body>> + '_ {
+        self.star_bodies[star]
+            .into_iter()
+            .filter(move |id| matches!(self.relation[id], RangeRelation::ParentOf(_)))
+    }
+}
+
+pub mod star_bodies {
+    use super::*;
+    use gen_id_component::Component;
+
+    #[derive(Debug, Default, Clone)]
+    pub struct StarBodies {
+        targets: Component<Star, IdRange<Body>>,
+        source: Component<Body, Id<Star>>,
+    }
+
+    impl StarBodies {
+        pub fn link(&mut self, star: Id<Star>, body: Id<Body>) {
+            self.source.insert(body, star);
+            if let Some(range) = self.targets.get_mut(star) {
+                range.extend(body);
+            } else {
+                self.targets.insert(star, body.into());
+            }
+        }
+    }
+
+    impl Index<Id<Star>> for StarBodies {
+        type Output = IdRange<Body>;
+
+        fn index(&self, index: Id<Star>) -> &Self::Output {
+            self.targets.index(index)
+        }
+    }
+
+    impl Index<Id<Body>> for StarBodies {
+        type Output = Id<Star>;
+
+        fn index(&self, index: Id<Body>) -> &Self::Output {
+            self.source.index(index)
+        }
     }
 }
