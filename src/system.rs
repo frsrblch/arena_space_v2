@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::state::State;
 use physics_types::DateTime;
 

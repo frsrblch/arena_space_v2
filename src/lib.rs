@@ -5,9 +5,12 @@ use physics_types::*;
 use crate::body::{Bodies, Body};
 use crate::star::{Star, Stars};
 
+pub use setup::*;
+
 mod setup;
 mod state;
 mod system;
 
 mod body;
+mod region;
 mod star;
