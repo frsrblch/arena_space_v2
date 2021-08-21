@@ -110,6 +110,7 @@ mod test {
         }
         .create();
 
+        drop(state);
         // panic!();
     }
 }

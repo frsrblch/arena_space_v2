@@ -119,8 +119,9 @@ fn get_roman_numeral(i: usize) -> &'static str {
 }
 
 fn get_abc_char(i: usize) -> char {
-    debug_assert!(i < 91);
-    (i + 65) as u8 as char
+    let c = (i as u8 + 'A' as u8) as char;
+    debug_assert!(c <= 'Z');
+    c
 }
 
 pub mod star_bodies {
