@@ -74,22 +74,29 @@ impl Bodies {
         match self.relation[id] {
             RangeRelation::ParentOf(_) => {
                 // E.g., Sol III
-                let p = self.planets(star).position(|p| p.eq(&id)).unwrap();
-                let p = get_roman_numeral(p);
-                format!("{} {}", star_name, p)
+                let planet = self.planets(star).position(|p| p.eq(&id)).unwrap();
+                get_standard_name(star_name, planet, None)
             }
             RangeRelation::ChildOf(parent) => {
                 // E.g., Sol III-A
-                let p = self.planets(star).position(|p| p.eq(&parent)).unwrap();
-                let p = get_roman_numeral(p);
+                let planet = self.planets(star).position(|p| p.eq(&parent)).unwrap();
 
                 let moons = self.relation[parent].parent_of().unwrap();
-                let m = moons.position(id).unwrap();
-                let m = get_abc_char(m);
+                let moon = moons.position(id).unwrap();
 
-                format!("{} {}-{}", star_name, p, m)
+                get_standard_name(star_name, planet, Some(moon))
             }
         }
+    }
+}
+
+pub fn get_standard_name(star: &str, planet: usize, moon: Option<usize>) -> String {
+    let planet = get_roman_numeral(planet);
+    if let Some(moon) = moon {
+        let moon = get_abc_char(moon);
+        format!("{} {}-{}", star, planet, moon)
+    } else {
+        format!("{} {}", star, planet)
     }
 }
 
@@ -112,19 +119,8 @@ fn get_roman_numeral(i: usize) -> &'static str {
 }
 
 fn get_abc_char(i: usize) -> char {
-    match i {
-        0 => 'A',
-        1 => 'B',
-        2 => 'C',
-        3 => 'D',
-        4 => 'E',
-        5 => 'F',
-        6 => 'G',
-        7 => 'H',
-        8 => 'I',
-        9 => 'J',
-        _ => panic!("number > 9"),
-    }
+    debug_assert!(i < 91);
+    (i + 65) as u8 as char
 }
 
 pub mod star_bodies {
@@ -162,5 +158,16 @@ pub mod star_bodies {
         fn index(&self, index: Id<Body>) -> &Self::Output {
             self.source.index(index)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn get_standard_names() {
+        assert_eq!("Rigel IV", get_standard_name("Rigel", 3, None));
+        assert_eq!("Rigel IV-C", get_standard_name("Rigel", 3, Some(2)));
     }
 }

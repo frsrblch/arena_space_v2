@@ -66,7 +66,7 @@ mod test {
         let state = Setup {
             systems: vec![StellarSystem {
                 star: Star {
-                    name: "Star".to_string(),
+                    name: "Rigel".to_string(),
                     mass: Default::default(),
                     radius: Default::default(),
                     temp: Default::default(),
@@ -110,15 +110,6 @@ mod test {
         }
         .create();
 
-        for id in state.state.allocators.body.ids() {
-            let n = state
-                .state
-                .body
-                .get_standard_name(id.value, &state.state.star);
-            println!("{}", n);
-        }
-
-        // dbg!(state);
-        panic!();
+        // panic!();
     }
 }
