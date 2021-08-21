@@ -54,3 +54,71 @@ pub struct Planet {
     pub body: Body,
     pub moons: Vec<Body>,
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use orbital_mechanics::EllipticalOrbit;
+    use physics_types::*;
+
+    #[test]
+    fn setup() {
+        let state = Setup {
+            systems: vec![StellarSystem {
+                star: Star {
+                    name: "Star".to_string(),
+                    mass: Default::default(),
+                    radius: Default::default(),
+                    temp: Default::default(),
+                    position: Default::default(),
+                },
+                planets: vec![Planet {
+                    body: Body {
+                        name: "Planet".to_string(),
+                        mass: Default::default(),
+                        radius: Default::default(),
+                        orbit: EllipticalOrbit::circular(
+                            Duration::in_days(1.0),
+                            Default::default(),
+                            Default::default(),
+                        ),
+                    },
+                    moons: vec![
+                        Body {
+                            name: "Moon A".to_string(),
+                            mass: Default::default(),
+                            radius: Default::default(),
+                            orbit: EllipticalOrbit::circular(
+                                Duration::in_days(1.0),
+                                Default::default(),
+                                Default::default(),
+                            ),
+                        },
+                        Body {
+                            name: "Moon B".to_string(),
+                            mass: Default::default(),
+                            radius: Default::default(),
+                            orbit: EllipticalOrbit::circular(
+                                Duration::in_days(2.0),
+                                Default::default(),
+                                Default::default(),
+                            ),
+                        },
+                    ],
+                }],
+            }],
+        }
+        .create();
+
+        for id in state.state.allocators.body.ids() {
+            let n = state
+                .state
+                .body
+                .get_standard_name(id.value, &state.state.star);
+            println!("{}", n);
+        }
+
+        // dbg!(state);
+        panic!();
+    }
+}
