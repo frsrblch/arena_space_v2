@@ -48,18 +48,14 @@ impl Bodies {
         }
     }
 
-    pub fn orbit_distance(&self, body: Id<Body>, time: TimeFloat) -> Distance {
+    pub fn orbit_position(&self, body: Id<Body>, time: TimeFloat) -> Position {
         match self.relation[body] {
             RangeRelation::ChildOf(parent) => {
                 self.orbit[parent].distance(time) + self.orbit[body].distance(time)
             }
             RangeRelation::ParentOf(_) => self.orbit[body].distance(time),
         }
-    }
-
-    pub fn position(&self, body: Id<Body>, time: TimeFloat, stars: &Stars) -> Position {
-        let star = self.star_bodies[body];
-        stars.position[star] + self.orbit_distance(body, time)
+        .into()
     }
 
     pub fn planets(&self, star: Id<Star>) -> impl Iterator<Item = Id<Body>> + '_ {
