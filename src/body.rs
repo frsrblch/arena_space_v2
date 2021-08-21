@@ -62,11 +62,68 @@ impl Bodies {
         stars.position[star] + self.orbit_distance(body, time)
     }
 
-    // TODO Relations::parents<I: IntoIterator<Item=Id<Arena>>>(I) -> impl Iterator
     pub fn planets(&self, star: Id<Star>) -> impl Iterator<Item = Id<Body>> + '_ {
-        self.star_bodies[star]
-            .into_iter()
-            .filter(move |id| matches!(self.relation[id], RangeRelation::ParentOf(_)))
+        let bodies = self.star_bodies[star];
+        self.relation.parents(bodies)
+    }
+
+    pub fn get_standard_name(&self, id: Id<Body>, stars: &Stars) -> String {
+        let star = self.star_bodies[id];
+        let star_name = &stars.name[star];
+
+        match self.relation[id] {
+            RangeRelation::ParentOf(_) => {
+                // E.g., Sol III
+                let p = self.planets(star).position(|p| p.eq(&id)).unwrap();
+                let p = get_roman_numeral(p);
+                format!("{} {}", star_name, p)
+            }
+            RangeRelation::ChildOf(parent) => {
+                // E.g., Sol III-A
+                let p = self.planets(star).position(|p| p.eq(&parent)).unwrap();
+                let p = get_roman_numeral(p);
+
+                let moons = self.relation[parent].parent_of().unwrap();
+                let m = moons.position(id).unwrap();
+                let m = get_abc_char(m);
+
+                format!("{} {}-{}", star_name, p, m)
+            }
+        }
+    }
+}
+
+fn get_roman_numeral(i: usize) -> &'static str {
+    match i {
+        0 => "I",
+        1 => "II",
+        2 => "III",
+        3 => "IV",
+        4 => "V",
+        5 => "VI",
+        6 => "VII",
+        7 => "VIII",
+        8 => "IX",
+        9 => "X",
+        10 => "XI",
+        11 => "XII",
+        _ => panic!("number > 11"),
+    }
+}
+
+fn get_abc_char(i: usize) -> char {
+    match i {
+        0 => 'A',
+        1 => 'B',
+        2 => 'C',
+        3 => 'D',
+        4 => 'E',
+        5 => 'F',
+        6 => 'G',
+        7 => 'H',
+        8 => 'I',
+        9 => 'J',
+        _ => panic!("number > 9"),
     }
 }
 
