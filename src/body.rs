@@ -69,12 +69,10 @@ impl Bodies {
 
         match self.relation[id] {
             RangeRelation::ParentOf(_) => {
-                // E.g., Sol III
                 let planet = self.planets(star).position(|p| p.eq(&id)).unwrap();
                 get_standard_name(star_name, planet, None)
             }
             RangeRelation::ChildOf(parent) => {
-                // E.g., Sol III-A
                 let planet = self.planets(star).position(|p| p.eq(&parent)).unwrap();
 
                 let moons = self.relation[parent].parent_of().unwrap();
@@ -89,9 +87,11 @@ impl Bodies {
 pub fn get_standard_name(star: &str, planet: usize, moon: Option<usize>) -> String {
     let planet = get_roman_numeral(planet);
     if let Some(moon) = moon {
+        // E.g., Sol III-A
         let moon = get_abc_char(moon);
         format!("{} {}-{}", star, planet, moon)
     } else {
+        // E.g., Sol III
         format!("{} {}", star, planet)
     }
 }
