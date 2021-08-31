@@ -1,8 +1,4 @@
-use crate::body::{Body, BodyLinks};
-use crate::star::Star;
-use crate::state::State;
-use crate::system::{SystemQueue, SystemState};
-use physics_types::DateTime;
+use crate::*;
 
 #[derive(Debug)]
 pub struct Setup {
@@ -17,21 +13,35 @@ impl Setup {
         let alloc = &mut state.allocators;
         let stars = &mut state.star;
         let bodies = &mut state.body;
+        let regions = &mut state.region;
 
         for stellar_system in self.systems {
             let star = alloc.star.create().value;
             stars.insert(star, stellar_system.star);
 
-            for planetary_system in stellar_system.planets {
-                let planet = alloc.body.create().value;
+            for planet in stellar_system.planets {
+                let planet_id = alloc.body.create().value;
                 let links = BodyLinks { star, parent: None };
-                bodies.insert(planet, planetary_system.body, links);
+                let Planet {
+                    body,
+                    moons,
+                    regions: planet_regions,
+                } = planet;
 
-                for moon in planetary_system.moons {
-                    let id = alloc.body.create().value;
-                    let parent = Some(planet);
+                bodies.insert(planet_id, body, links);
+                regions.insert(planet_regions, planet_id, &mut alloc.region);
+
+                for moon in moons {
+                    let moon_id = alloc.body.create().value;
+                    let parent = Some(planet_id);
                     let links = BodyLinks { star, parent };
-                    bodies.insert(id, moon, links);
+                    let Moon {
+                        body,
+                        regions: moon_regions,
+                    } = moon;
+
+                    bodies.insert(moon_id, body, links);
+                    regions.insert(moon_regions, moon_id, &mut alloc.region);
                 }
             }
         }
@@ -52,14 +62,20 @@ pub struct StellarSystem {
 #[derive(Debug)]
 pub struct Planet {
     pub body: Body,
-    pub moons: Vec<Body>,
+    pub moons: Vec<Moon>,
+    pub regions: Vec<Region>,
+}
+
+#[derive(Debug)]
+pub struct Moon {
+    pub body: Body,
+    pub regions: Vec<Region>,
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
     use orbital_mechanics::EllipticalOrbit;
-    use physics_types::*;
 
     #[test]
     fn setup() {
@@ -83,26 +99,39 @@ mod test {
                             Default::default(),
                         ),
                     },
+                    regions: vec![Region {
+                        area: Default::default(),
+                    }],
                     moons: vec![
-                        Body {
-                            name: "Moon A".to_string(),
-                            mass: Default::default(),
-                            radius: Default::default(),
-                            orbit: EllipticalOrbit::circular(
-                                Duration::in_days(1.0),
-                                Default::default(),
-                                Default::default(),
-                            ),
+                        Moon {
+                            body: Body {
+                                name: "Moon A".to_string(),
+                                mass: Default::default(),
+                                radius: Default::default(),
+                                orbit: EllipticalOrbit::circular(
+                                    Duration::in_days(1.0),
+                                    Default::default(),
+                                    Default::default(),
+                                ),
+                            },
+                            regions: vec![Region {
+                                area: Default::default(),
+                            }],
                         },
-                        Body {
-                            name: "Moon B".to_string(),
-                            mass: Default::default(),
-                            radius: Default::default(),
-                            orbit: EllipticalOrbit::circular(
-                                Duration::in_days(2.0),
-                                Default::default(),
-                                Default::default(),
-                            ),
+                        Moon {
+                            body: Body {
+                                name: "Moon B".to_string(),
+                                mass: Default::default(),
+                                radius: Default::default(),
+                                orbit: EllipticalOrbit::circular(
+                                    Duration::in_days(2.0),
+                                    Default::default(),
+                                    Default::default(),
+                                ),
+                            },
+                            regions: vec![Region {
+                                area: Default::default(),
+                            }],
                         },
                     ],
                 }],
