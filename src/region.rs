@@ -2,10 +2,11 @@
 
 use super::*;
 use crate::region::body_regions::BodyRegions;
+use sphere_geometry::adjacency::Adjacency;
 
 // Thinking:
-// - Regions of a body defined by an `IdRange`
-// - Lat/Lon, neighbors determined by the range and the position within the range
+// - DONE: Regions of a body defined by an `IdRange`
+// - DONE: Lat/Lon, neighbors determined by the range and the position within the range
 
 #[derive(Debug, Copy, Clone)]
 pub struct Region {
@@ -21,6 +22,8 @@ pub struct Regions {
     pub area: Component<Region, Area>,
     pub body: Component<Region, Id<Body>>,
     pub body_regions: BodyRegions,
+
+    pub adjacency: Adjacency,
 }
 
 impl Regions {
@@ -36,6 +39,8 @@ impl Regions {
             self.area.insert(id, region.area);
             self.body_regions.link(body, id);
         }
+
+        self.adjacency.register(id_range.len());
 
         id_range
     }
