@@ -43,10 +43,9 @@ impl Setup {
 
                 for moon in moons {
                     let moon_id = body_ids.next().expect("not enough body ids created");
-                    let parent = Some(planet_id);
                     let links = BodyLinks {
                         star: star_id,
-                        parent,
+                        parent: Some(planet_id),
                     };
                     let Moon { body, moon_regions } = moon;
 

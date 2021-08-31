@@ -115,7 +115,7 @@ fn get_roman_numeral(i: usize) -> &'static str {
 }
 
 fn get_abc_char(i: usize) -> char {
-    let c = (i as u8 + 'A' as u8) as char;
+    let c = (i as u8 + b'A') as char;
     debug_assert!(c <= 'Z');
     c
 }
