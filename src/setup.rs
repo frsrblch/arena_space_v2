@@ -15,35 +15,47 @@ impl Setup {
         let bodies = &mut state.body;
         let regions = &mut state.region;
 
-        for stellar_system in self.systems {
-            let star = alloc.star.create().value;
-            stars.insert(star, stellar_system.star);
+        let star_count = self.systems.len();
+        let star_ids = alloc.star.create(star_count);
 
-            for planet in stellar_system.planets {
-                let planet_id = alloc.body.create().value;
-                let links = BodyLinks { star, parent: None };
+        for (stellar_system, star_id) in self.systems.into_iter().zip(star_ids) {
+            let StellarSystem { star, planets } = stellar_system;
+
+            stars.insert(star_id, star);
+
+            let body_count = planets.iter().map(|planet| 1 + planet.moons.len()).sum();
+            let mut body_ids = alloc.body.create(body_count).into_iter();
+
+            for planet in planets {
+                let planet_id = body_ids.next().expect("not enough body ids created");
+                let links = BodyLinks {
+                    star: star_id,
+                    parent: None,
+                };
                 let Planet {
                     body,
                     moons,
-                    regions: planet_regions,
+                    planet_regions,
                 } = planet;
 
                 bodies.insert(planet_id, body, links);
                 regions.insert(planet_regions, planet_id, &mut alloc.region);
 
                 for moon in moons {
-                    let moon_id = alloc.body.create().value;
+                    let moon_id = body_ids.next().expect("not enough body ids created");
                     let parent = Some(planet_id);
-                    let links = BodyLinks { star, parent };
-                    let Moon {
-                        body,
-                        regions: moon_regions,
-                    } = moon;
+                    let links = BodyLinks {
+                        star: star_id,
+                        parent,
+                    };
+                    let Moon { body, moon_regions } = moon;
 
                     bodies.insert(moon_id, body, links);
                     regions.insert(moon_regions, moon_id, &mut alloc.region);
                 }
             }
+
+            debug_assert_eq!(None, body_ids.next(), "too many body ids created");
         }
 
         SystemState {
@@ -63,13 +75,13 @@ pub struct StellarSystem {
 pub struct Planet {
     pub body: Body,
     pub moons: Vec<Moon>,
-    pub regions: Vec<Region>,
+    pub planet_regions: Vec<Region>,
 }
 
 #[derive(Debug)]
 pub struct Moon {
     pub body: Body,
-    pub regions: Vec<Region>,
+    pub moon_regions: Vec<Region>,
 }
 
 #[cfg(test)]
@@ -99,7 +111,7 @@ mod test {
                             Default::default(),
                         ),
                     },
-                    regions: vec![Region {
+                    planet_regions: vec![Region {
                         area: Default::default(),
                     }],
                     moons: vec![
@@ -114,7 +126,7 @@ mod test {
                                     Default::default(),
                                 ),
                             },
-                            regions: vec![Region {
+                            moon_regions: vec![Region {
                                 area: Default::default(),
                             }],
                         },
@@ -129,7 +141,7 @@ mod test {
                                     Default::default(),
                                 ),
                             },
-                            regions: vec![Region {
+                            moon_regions: vec![Region {
                                 area: Default::default(),
                             }],
                         },

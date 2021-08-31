@@ -2,8 +2,8 @@ use crate::*;
 
 #[derive(Debug, Default)]
 pub struct Allocators {
-    pub star: Allocator<Star>,
-    pub body: Allocator<Body>,
+    pub star: RangeAllocator<Star>,
+    pub body: RangeAllocator<Body>,
     pub region: RangeAllocator<Region>,
 }
 
