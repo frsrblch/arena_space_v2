@@ -2,7 +2,8 @@
 
 use super::*;
 use crate::region::body_regions::BodyRegions;
-use sphere_geometry::adjacency::Adjacency;
+use planetary_dynamics::adjacency::Adjacency;
+use planetary_dynamics::terrain::Terrain;
 
 // Thinking:
 // - DONE: Regions of a body defined by an `IdRange`
@@ -10,16 +11,15 @@ use sphere_geometry::adjacency::Adjacency;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Region {
-    pub area: Area,
+    pub terrain: Terrain,
 }
 
 fixed_id!(Region);
 
-pub enum RegionType {}
-
 #[derive(Debug, Default)]
 pub struct Regions {
-    pub area: Component<Region, Area>,
+    pub terrain: Component<Region, Terrain>,
+
     pub body: Component<Region, Id<Body>>,
     pub body_regions: BodyRegions,
 
@@ -35,12 +35,11 @@ impl Regions {
     ) -> IdRange<Region> {
         let id_range = alloc.create(regions.len());
 
-        for (region, id) in regions.into_iter().zip(id_range) {
-            self.area.insert(id, region.area);
+        self.adjacency.register(regions.len());
+
+        for (id, _region) in id_range.into_iter().zip(regions) {
             self.body_regions.link(body, id);
         }
-
-        self.adjacency.register(id_range.len());
 
         id_range
     }

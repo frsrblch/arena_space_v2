@@ -9,7 +9,9 @@ edition = "2018"
 gen_id_allocator = { git = "https://github.com/frsrblch/gen_id_allocator" }
 gen_id_component = { git = "https://github.com/frsrblch/gen_id_component" }
 gen_id_relations = { git = "https://github.com/frsrblch/gen_id_relations" }
+gen_id_enum_derive = { git = "https://github.com/frsrblch/gen_id_enum_derive" }
 orbital_mechanics = { git = "https://github.com/frsrblch/orbital_mechanics" }
-sphere_geometry = { git = "https://github.com/frsrblch/sphere_geometry" }
+planetary_dynamics = { git = "https://github.com/frsrblch/planetary_dynamics" }
 iter_context = { git = "https://github.com/frsrblch/iter_context" }
 physics_types = { git = "https://github.com/frsrblch/physics_types" }
+rand = { version = "^0.8", features = ['small_rng'] }

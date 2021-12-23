@@ -1,4 +1,6 @@
 use crate::*;
+use planetary_dynamics::tile_gen::TileGen;
+use rand::thread_rng;
 
 #[derive(Debug)]
 pub struct Setup {
@@ -7,6 +9,8 @@ pub struct Setup {
 
 impl Setup {
     pub fn create(self) -> SystemState {
+        let rng = &mut thread_rng();
+
         let start = DateTime::parse_from_str("2050-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
         let mut state = State::default();
 
@@ -38,8 +42,14 @@ impl Setup {
                     planet_regions,
                 } = planet;
 
+                let tiles = planet_regions
+                    .generate(body.radius, &regions.adjacency, rng)
+                    .into_iter()
+                    .map(|terrain| Region { terrain })
+                    .collect();
+
                 bodies.insert(planet_id, body, links);
-                regions.insert(planet_regions, planet_id, &mut alloc.region);
+                regions.insert(tiles, planet_id, &mut alloc.region);
 
                 for moon in moons {
                     let moon_id = body_ids.next().expect("not enough body ids created");
@@ -49,8 +59,14 @@ impl Setup {
                     };
                     let Moon { body, moon_regions } = moon;
 
+                    let tiles = moon_regions
+                        .generate(body.radius, &regions.adjacency, rng)
+                        .into_iter()
+                        .map(|terrain| Region { terrain })
+                        .collect();
+
                     bodies.insert(moon_id, body, links);
-                    regions.insert(moon_regions, moon_id, &mut alloc.region);
+                    regions.insert(tiles, moon_id, &mut alloc.region);
                 }
             }
 
@@ -74,13 +90,13 @@ pub struct StellarSystem {
 pub struct Planet {
     pub body: Body,
     pub moons: Vec<Moon>,
-    pub planet_regions: Vec<Region>,
+    pub planet_regions: TileGen,
 }
 
 #[derive(Debug)]
 pub struct Moon {
     pub body: Body,
-    pub moon_regions: Vec<Region>,
+    pub moon_regions: TileGen,
 }
 
 #[cfg(test)]
@@ -88,9 +104,11 @@ mod test {
     use super::*;
     use orbital_mechanics::EllipticalOrbit;
 
-    #[test]
-    fn setup() {
-        let state = Setup {
+    #[allow(dead_code)]
+    fn setup() -> SystemState {
+        let r1 = 6300.0 * KM;
+
+        Setup {
             systems: vec![StellarSystem {
                 star: Star {
                     name: "Rigel".to_string(),
@@ -102,17 +120,17 @@ mod test {
                 planets: vec![Planet {
                     body: Body {
                         name: "Planet".to_string(),
-                        mass: Default::default(),
-                        radius: Default::default(),
+                        mass: 5.972e24 * KG,
+                        radius: r1,
                         orbit: EllipticalOrbit::circular(
-                            Duration::in_days(1.0),
+                            Duration::in_d(1.0),
                             Default::default(),
                             Default::default(),
                         ),
                     },
-                    planet_regions: vec![Region {
-                        area: Default::default(),
-                    }],
+                    planet_regions: TileGen {
+                        water_fraction: 0.7,
+                    },
                     moons: vec![
                         Moon {
                             body: Body {
@@ -120,14 +138,14 @@ mod test {
                                 mass: Default::default(),
                                 radius: Default::default(),
                                 orbit: EllipticalOrbit::circular(
-                                    Duration::in_days(1.0),
+                                    Duration::in_d(1.0),
                                     Default::default(),
                                     Default::default(),
                                 ),
                             },
-                            moon_regions: vec![Region {
-                                area: Default::default(),
-                            }],
+                            moon_regions: TileGen {
+                                water_fraction: 0.0,
+                            },
                         },
                         Moon {
                             body: Body {
@@ -135,22 +153,19 @@ mod test {
                                 mass: Default::default(),
                                 radius: Default::default(),
                                 orbit: EllipticalOrbit::circular(
-                                    Duration::in_days(2.0),
+                                    Duration::in_d(2.0),
                                     Default::default(),
                                     Default::default(),
                                 ),
                             },
-                            moon_regions: vec![Region {
-                                area: Default::default(),
-                            }],
+                            moon_regions: TileGen {
+                                water_fraction: 0.0,
+                            },
                         },
                     ],
                 }],
             }],
         }
-        .create();
-
-        drop(state);
-        // panic!();
+        .create()
     }
 }
