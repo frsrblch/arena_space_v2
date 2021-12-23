@@ -106,8 +106,6 @@ mod test {
 
     #[allow(dead_code)]
     fn setup() -> SystemState {
-        let r1 = 6300.0 * KM;
-
         Setup {
             systems: vec![StellarSystem {
                 star: Star {
@@ -121,7 +119,7 @@ mod test {
                     body: Body {
                         name: "Planet".to_string(),
                         mass: 5.972e24 * KG,
-                        radius: r1,
+                        radius: 6300.0 * KM,
                         orbit: EllipticalOrbit::circular(
                             Duration::in_d(1.0),
                             Default::default(),
@@ -135,32 +133,28 @@ mod test {
                         Moon {
                             body: Body {
                                 name: "Moon A".to_string(),
-                                mass: Default::default(),
-                                radius: Default::default(),
+                                mass: 7e22 * KG,
+                                radius: 1700.0 * KM,
                                 orbit: EllipticalOrbit::circular(
                                     Duration::in_d(1.0),
                                     Default::default(),
                                     Default::default(),
                                 ),
                             },
-                            moon_regions: TileGen {
-                                water_fraction: 0.0,
-                            },
+                            moon_regions: TileGen::default(),
                         },
                         Moon {
                             body: Body {
                                 name: "Moon B".to_string(),
-                                mass: Default::default(),
-                                radius: Default::default(),
+                                mass: 4e22 * KG,
+                                radius: 1500.0 * KM,
                                 orbit: EllipticalOrbit::circular(
                                     Duration::in_d(2.0),
                                     Default::default(),
                                     Default::default(),
                                 ),
                             },
-                            moon_regions: TileGen {
-                                water_fraction: 0.0,
-                            },
+                            moon_regions: TileGen::default(),
                         },
                     ],
                 }],
