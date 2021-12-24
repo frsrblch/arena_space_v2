@@ -1,7 +1,7 @@
 use crate::body::star_bodies::StarBodies;
 use crate::*;
 use gen_id_relations::{RangeRelation, RangeRelations};
-use orbital_mechanics::EllipticalOrbit;
+use orbital_mechanics::{EllipticalOrbit, Rotation};
 use std::ops::Index;
 
 type Comp<T> = Component<Body, T>;
@@ -12,6 +12,7 @@ pub struct Body {
     pub mass: Mass,
     pub radius: Length,
     pub orbit: EllipticalOrbit,
+    pub rotation: Rotation,
 }
 
 fixed_id!(Body);
@@ -28,6 +29,7 @@ pub struct Bodies {
     pub mass: Comp<Mass>,
     pub radius: Comp<Length>,
     pub orbit: Comp<EllipticalOrbit>,
+    pub rotation: Comp<Rotation>,
 
     pub star_bodies: StarBodies,
     pub relation: RangeRelations<Body>,
@@ -39,6 +41,7 @@ impl Bodies {
         self.mass.insert(id, body.mass);
         self.radius.insert(id, body.radius);
         self.orbit.insert(id, body.orbit);
+        self.rotation.insert(id, body.rotation);
 
         self.star_bodies.link(links.star, id);
 

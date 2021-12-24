@@ -22,27 +22,20 @@ impl Setup {
         let star_count = self.systems.len();
         let star_ids = alloc.star.create(star_count);
 
-        for (stellar_system, star_id) in self.systems.into_iter().zip(star_ids) {
-            let StellarSystem { star, planets } = stellar_system;
-
+        for (StellarSystem { star, planets }, star_id) in self.systems.into_iter().zip(star_ids) {
             stars.insert(star_id, star);
 
             let body_count = planets.iter().map(|planet| 1 + planet.moons.len()).sum();
             let mut body_ids = alloc.body.create(body_count).into_iter();
 
-            for planet in planets {
+            for Planet { body, moons, tiles } in planets {
                 let planet_id = body_ids.next().expect("not enough body ids created");
                 let links = BodyLinks {
                     star: star_id,
                     parent: None,
                 };
-                let Planet {
-                    body,
-                    moons,
-                    planet_regions,
-                } = planet;
 
-                let tiles = planet_regions
+                let tiles = tiles
                     .generate(body.radius, &regions.adjacency, rng)
                     .into_iter()
                     .map(|terrain| Region { terrain })
@@ -51,15 +44,14 @@ impl Setup {
                 bodies.insert(planet_id, body, links);
                 regions.insert(tiles, planet_id, &mut alloc.region);
 
-                for moon in moons {
+                let links = BodyLinks {
+                    star: star_id,
+                    parent: Some(planet_id),
+                };
+                for Moon { body, tiles } in moons {
                     let moon_id = body_ids.next().expect("not enough body ids created");
-                    let links = BodyLinks {
-                        star: star_id,
-                        parent: Some(planet_id),
-                    };
-                    let Moon { body, moon_regions } = moon;
 
-                    let tiles = moon_regions
+                    let tiles = tiles
                         .generate(body.radius, &regions.adjacency, rng)
                         .into_iter()
                         .map(|terrain| Region { terrain })
@@ -90,22 +82,36 @@ pub struct StellarSystem {
 pub struct Planet {
     pub body: Body,
     pub moons: Vec<Moon>,
-    pub planet_regions: TileGen,
+    pub tiles: TileGen,
 }
 
 #[derive(Debug)]
 pub struct Moon {
     pub body: Body,
-    pub moon_regions: TileGen,
+    pub tiles: TileGen,
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use orbital_mechanics::EllipticalOrbit;
+    use orbital_mechanics::{EllipticalOrbit, Rotation};
+    use rand::prelude::{Rng, SeedableRng, SmallRng};
 
     #[allow(dead_code)]
     fn setup() -> SystemState {
+        let rng = &mut SmallRng::seed_from_u64(0);
+
+        let m_p = 6e24 * KG;
+
+        let m1 = 7e22 * KG;
+        let m2 = 4e22 * KG;
+
+        let r1 = 1700.0 * KM;
+        let r2 = 1500.0 * KM;
+
+        let or1 = 200e3 * KM;
+        let or2 = 300e3 * KM;
+
         Setup {
             systems: vec![StellarSystem {
                 star: Star {
@@ -118,43 +124,50 @@ mod test {
                 planets: vec![Planet {
                     body: Body {
                         name: "Planet".to_string(),
-                        mass: 5.972e24 * KG,
+                        mass: m_p,
                         radius: 6300.0 * KM,
                         orbit: EllipticalOrbit::circular(
                             Duration::in_d(1.0),
                             Default::default(),
                             Default::default(),
                         ),
+                        rotation: Rotation::new(
+                            Duration::in_d(1.0),
+                            Angle::in_deg(20.0),
+                            rng.gen(),
+                        ),
                     },
-                    planet_regions: TileGen {
+                    tiles: TileGen {
                         water_fraction: 0.7,
                     },
                     moons: vec![
                         Moon {
                             body: Body {
                                 name: "Moon A".to_string(),
-                                mass: 7e22 * KG,
-                                radius: 1700.0 * KM,
-                                orbit: EllipticalOrbit::circular(
-                                    Duration::in_d(1.0),
-                                    Default::default(),
-                                    Default::default(),
+                                mass: m1,
+                                radius: r1,
+                                orbit: EllipticalOrbit::circular_from_parent(m_p, or1, rng.gen()),
+                                rotation: Rotation::new(
+                                    Duration::of_orbit(or1, m_p),
+                                    Angle::zero(),
+                                    Angle::zero(),
                                 ),
                             },
-                            moon_regions: TileGen::default(),
+                            tiles: TileGen::default(),
                         },
                         Moon {
                             body: Body {
                                 name: "Moon B".to_string(),
-                                mass: 4e22 * KG,
-                                radius: 1500.0 * KM,
-                                orbit: EllipticalOrbit::circular(
-                                    Duration::in_d(2.0),
-                                    Default::default(),
-                                    Default::default(),
+                                mass: m2,
+                                radius: r2,
+                                orbit: EllipticalOrbit::circular_from_parent(m_p, or2, rng.gen()),
+                                rotation: Rotation::new(
+                                    Duration::of_orbit(or2, m_p),
+                                    Angle::zero(),
+                                    Angle::zero(),
                                 ),
                             },
-                            moon_regions: TileGen::default(),
+                            tiles: TileGen::default(),
                         },
                     ],
                 }],
